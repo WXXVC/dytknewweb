@@ -490,13 +490,24 @@ async function request(path, options = {}) {
   const requestId = beginTrackedRequest(path);
   const controller = new AbortController();
   const timeoutHandle = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const method = String(options.method || "GET").toUpperCase();
+  const requestPath = method === "GET" || method === "HEAD"
+    ? `${path}${path.includes("?") ? "&" : "?"}_=${Date.now()}`
+    : path;
   let response;
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await fetch(`${API_BASE}${requestPath}`, {
       headers: {
         "Content-Type": "application/json",
+        ...(method === "GET" || method === "HEAD"
+          ? {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              Pragma: "no-cache",
+            }
+          : {}),
         ...(options.headers || {}),
       },
+      cache: method === "GET" || method === "HEAD" ? "no-store" : options.cache,
       ...options,
       signal: controller.signal,
     });

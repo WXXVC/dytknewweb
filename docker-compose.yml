@@ -1,0 +1,38 @@
+services:
+  newweb-backend:
+    build:
+      context: ..
+      dockerfile: NEWWEB/docker/backend.Dockerfile
+    container_name: newweb-backend
+    restart: unless-stopped
+    environment:
+      NEWWEB_DATA_DIR: /app/NEWWEB/data
+      ENGINE_VOLUME_PATH: /app/Volume
+      ENGINE_API_BASE: http://host.docker.internal:5555
+      ENGINE_API_TOKEN: ""
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /ddata/tkdown:/app/Volume
+      - /ddata/tkdown/newweb:/app/NEWWEB/data
+    ports:
+      - "8000:8000"
+    networks:
+      - newweb_bridge
+
+  newweb-frontend:
+    build:
+      context: ..
+      dockerfile: NEWWEB/docker/frontend.Dockerfile
+    container_name: newweb-frontend
+    restart: unless-stopped
+    depends_on:
+      - newweb-backend
+    ports:
+      - "4173:80"
+    networks:
+      - newweb_bridge
+
+networks:
+  newweb_bridge:
+    driver: bridge

@@ -1,0 +1,53 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.python-version
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Logs
+*.log
+
+# Local environment files
+.env
+.env.*
+
+# Project runtime data
+data/task_logs/
+data/task_runtime/
+data/panel_store.json
+data/panel_store.sqlite3
+data/panel.db
+data/panel.db-journal
+data/panel_config.json
+data/risk_guard_state.json
+
+# Keep the mock example data for debugging/demo
+!data/mock_scan_results.json
+
+# Backend local scratch data
+backend/data/
+
+# SQLite / local databases generated during development
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+

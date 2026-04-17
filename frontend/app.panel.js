@@ -13,6 +13,7 @@
 
 const API_BASE = resolveApiBase();
 const REQUEST_TIMEOUT_MS = 15000;
+const SCAN_REQUEST_TIMEOUT_MS = 45000;
 const POLL_INTERVAL_MS = 5000;
 const POLL_BACKOFF_MS = 20000;
 const MAX_CONSECUTIVE_POLL_FAILURES = 3;
@@ -489,7 +490,8 @@ async function runLockedAction(key, action) {
 async function request(path, options = {}) {
   const requestId = beginTrackedRequest(path);
   const controller = new AbortController();
-  const timeoutHandle = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : REQUEST_TIMEOUT_MS;
+  const timeoutHandle = window.setTimeout(() => controller.abort(), timeoutMs);
   const method = String(options.method || "GET").toUpperCase();
   const requestPath = method === "GET" || method === "HEAD"
     ? `${path}${path.includes("?") ? "&" : "?"}_=${Date.now()}`
@@ -2113,7 +2115,9 @@ async function loadLatestScan() {
   if (state.showDownloaded) {
     query.set("show_downloaded", "true");
   }
-  renderScan(await request(`/scans/creator/${creatorId}/latest?${query.toString()}`));
+  renderScan(await request(`/scans/creator/${creatorId}/latest?${query.toString()}`, {
+    timeoutMs: SCAN_REQUEST_TIMEOUT_MS,
+  }));
 }
 
 async function loadCreators() {
@@ -2610,7 +2614,10 @@ function bindActions() {
     if (state.showDownloaded) {
       query.set("show_downloaded", "true");
     }
-    renderScan(await request(`/scans/creator/${creatorId}?${query.toString()}`, { method: "POST" }));
+    renderScan(await request(`/scans/creator/${creatorId}?${query.toString()}`, {
+      method: "POST",
+      timeoutMs: SCAN_REQUEST_TIMEOUT_MS,
+    }));
   }));
 
   document.getElementById("show-downloaded").addEventListener("change", (event) => {

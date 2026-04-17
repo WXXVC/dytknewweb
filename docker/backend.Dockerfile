@@ -1,13 +1,14 @@
 FROM python:3.12-slim
 
-WORKDIR /app/NEWWEB/backend
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-COPY requirements.txt /app/requirements.txt
-COPY NEWWEB/backend/requirements.txt /app/NEWWEB/backend/requirements.txt
+WORKDIR /app/backend
 
-RUN pip install --no-cache-dir -r /app/requirements.txt
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY . /app
+COPY backend /app/backend
 
 EXPOSE 8000
 

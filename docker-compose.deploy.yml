@@ -1,9 +1,6 @@
 services:
   newweb-backend:
     image: ${BACKEND_IMAGE:-ghcr.io/wxxvc/dytknewweb-backend}:${IMAGE_TAG:-latest}
-    build:
-      context: .
-      dockerfile: docker/backend.Dockerfile
     container_name: newweb-backend
     restart: unless-stopped
     environment:
@@ -23,9 +20,6 @@ services:
 
   newweb-frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/wxxvc/dytknewweb-frontend}:${IMAGE_TAG:-latest}
-    build:
-      context: .
-      dockerfile: docker/frontend.Dockerfile
     container_name: newweb-frontend
     restart: unless-stopped
     depends_on:

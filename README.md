@@ -54,17 +54,20 @@ pip install -r requirements.txt
 - `NEWWEB/docker/frontend.Dockerfile`
 - `NEWWEB/docker/nginx.conf`
 - `NEWWEB/docker-compose.yml`
+- `NEWWEB/docker-compose.deploy.yml`
 
-当前 `docker-compose.yml` 已显式使用 `bridge` 网络，并假设：
+### 本地构建部署
+
+`docker-compose.yml` 同时支持本地构建和使用预构建镜像，默认假设：
 
 - 原引擎项目的 `Volume` 挂载目录是 `/ddata/tkdown`
-- 面板自己的数据目录使用 `/ddata/tkdown/newweb-data`
+- 面板自己的数据目录使用 `/ddata/tkdown/newweb`
 - 原引擎 Web API 通过宿主机 `5555` 端口访问
 
 创建面板数据目录：
 
 ```bash
-mkdir -p /ddata/tkdown/newweb-data
+mkdir -p /ddata/tkdown/newweb
 ```
 
 启动：
@@ -74,12 +77,40 @@ cd NEWWEB
 docker compose up -d --build
 ```
 
-启动后访问：
+### 单镜像一键部署
+
+默认单镜像地址：
+
+- `ghcr.io/wxxvc/dytknewweb:latest`
+
+一键部署指令：
+
+```bash
+docker run -d \
+  --name dytknewweb \
+  -p 4173:8000 \
+  -e ENGINE_API_BASE=http://host.docker.internal:5555 \
+  --add-host host.docker.internal:host-gateway \
+  -v /ddata/tkdown/newweb:/app/data \
+  -v /ddata/tkdown:/app/Volume \
+  ghcr.io/wxxvc/dytknewweb:latest
+```
+
+这个单镜像会同时提供：
 
 - 前端页面：`http://你的服务器IP:4173`
-- 后端 Swagger：`http://你的服务器IP:8000/docs`
+- 后端 API：`http://你的服务器IP:4173/api`
+- Swagger：`http://你的服务器IP:4173/api/docs`
 
-如果你的引擎 API 地址不是宿主机 `5555`，请修改 `docker-compose.yml` 中的 `ENGINE_API_BASE`。
+### 双镜像部署
+
+如果你更喜欢前后端分离部署，仍然可以使用 `docker-compose.deploy.yml`：
+
+```bash
+mkdir -p /opt/newweb /ddata/tkdown/newweb && cd /opt/newweb && curl -fsSL https://raw.githubusercontent.com/WXXVC/dytknewweb/main/docker-compose.deploy.yml -o docker-compose.deploy.yml && docker compose -f docker-compose.deploy.yml pull && docker compose -f docker-compose.deploy.yml up -d
+```
+
+如果你的引擎 API 地址不是宿主机 `5555`，请修改对应 Compose 文件中的 `ENGINE_API_BASE`，或者在启动前通过环境变量覆盖。
 
 ## 使用说明
 

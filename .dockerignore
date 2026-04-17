@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db
+data
+backend/data
+backend/.pytest_cache
+backend/.mypy_cache
+backend/.ruff_cache
+frontend/node_modules

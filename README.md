@@ -83,6 +83,62 @@ docker compose up -d --build
 
 - `ghcr.io/wxxvc/dytknewweb:latest`
 
+如果你使用的是独立的 `NEWWEB` 仓库，并且希望“扫描走引擎 API、下载由面板容器内 worker 执行”，则单镜像在本地构建时还需要额外打包引擎运行文件。
+
+推荐在 `NEWWEB` 仓库根目录准备一个 `engine_vendor/` 目录，至少包含：
+
+- `engine_vendor/src`
+- `engine_vendor/locale`
+- `engine_vendor/static`
+- `engine_vendor/main.py`
+- `engine_vendor/requirements.txt`
+
+示例准备方式：
+
+```bash
+mkdir -p engine_vendor
+cp -r /opt/TKDOWN/src engine_vendor/src
+cp -r /opt/TKDOWN/locale engine_vendor/locale
+cp -r /opt/TKDOWN/static engine_vendor/static
+cp /opt/TKDOWN/main.py engine_vendor/main.py
+cp /opt/TKDOWN/requirements.txt engine_vendor/requirements.txt
+```
+
+准备完成后，本地构建单镜像：
+
+```bash
+docker build -f docker/single.Dockerfile -t dytknewweb:local .
+```
+
+如果你希望推送到 GitHub 后自动构建出“可直接使用”的镜像，也可以把 `engine_vendor/` 一并提交到仓库，并使用仓库内的 GitHub Actions 工作流自动发布单镜像。
+
+当前工作流会校验以下路径是否已提交：
+
+- `NEWWEB/engine_vendor/src`
+- `NEWWEB/engine_vendor/locale`
+- `NEWWEB/engine_vendor/static`
+- `NEWWEB/engine_vendor/main.py`
+- `NEWWEB/engine_vendor/requirements.txt`
+
+满足后，推送到默认分支或打 `v*` 标签时，会自动构建并推送：
+
+- `ghcr.io/<你的 GitHub 用户名或组织名>/dytknewweb:latest`
+- `ghcr.io/<你的 GitHub 用户名或组织名>/dytknewweb:<tag>`
+- `ghcr.io/<你的 GitHub 用户名或组织名>/dytknewweb:sha-<commit>`
+
+再使用本地构建镜像启动：
+
+```bash
+docker run -d \
+  --name dytknewweb \
+  -p 4173:8000 \
+  -e ENGINE_API_BASE=http://host.docker.internal:5555 \
+  --add-host host.docker.internal:host-gateway \
+  -v /ddata/tkdown/newweb:/app/data \
+  -v /ddata/tkdown:/app/Volume \
+  dytknewweb:local
+```
+
 一键部署指令：
 
 ```bash

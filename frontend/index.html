@@ -6,7 +6,22 @@
   <title>NEWWEB Downloader Panel</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
+<body class="auth-locked">
+  <div id="auth-gate" class="auth-gate">
+    <div class="auth-card">
+      <div class="auth-badge">受限访问</div>
+      <h1>请输入访问密码</h1>
+      <p>只有输入正确密码后，才可以进入当前页面。</p>
+      <form id="auth-form" class="auth-form">
+        <label class="field-label auth-field">
+          <span>访问密码</span>
+          <input id="auth-password" name="password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="请输入密码" required />
+        </label>
+        <p id="auth-error" class="auth-error" hidden>密码错误，请重试。</p>
+        <button type="submit" id="auth-submit">进入页面</button>
+      </form>
+    </div>
+  </div>
   <div class="app-shell">
     <aside class="sidebar">
       <h1>TKWEB</h1>
@@ -248,6 +263,17 @@
                   <span>暂停分钟数</span>
                   <input name="auto_download_pause_minutes" type="number" min="1" placeholder="5" />
                   <small class="field-help">触发暂停后，等待多久再自动恢复。</small>
+                </label>
+              </div>
+            </section>
+
+            <section class="engine-config-group">
+              <h3>页面访问</h3>
+              <div class="engine-form-grid">
+                <label class="field-label engine-field">
+                  <span>访问密码</span>
+                  <input name="access_password" type="text" placeholder="请输入页面访问密码" />
+                  <small class="field-help">进入面板首页前需要输入的密码，保存后立即生效。</small>
                 </label>
               </div>
             </section>

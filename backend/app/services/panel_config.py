@@ -9,6 +9,7 @@ PANEL_CONFIG_PATH = DATA_DIR / "panel_config.json"
 PANEL_CONFIG_ENCODING = "utf-8-sig" if system() == "Windows" else "utf-8"
 
 PANEL_CONFIG_DEFAULTS = {
+    "access_password": "151150",
     "auto_download_pause_mode": "works",
     "auto_download_pause_after_works": 1000,
     "auto_download_pause_after_creators": 10,

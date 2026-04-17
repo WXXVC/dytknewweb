@@ -16,6 +16,7 @@ const REQUEST_TIMEOUT_MS = 15000;
 const POLL_INTERVAL_MS = 5000;
 const POLL_BACKOFF_MS = 20000;
 const MAX_CONSECUTIVE_POLL_FAILURES = 3;
+const ACCESS_STORAGE_KEY = "newweb-access-granted";
 const PROFILE_NAME_FORMAT_MODULES = [
   { key: "create_time", label: "发布时间", description: "作品发布时间" },
   { key: "type", label: "作品类型", description: "视频 / 图集等" },
@@ -1551,6 +1552,7 @@ function fillEngineConfigForm(item) {
   form.cookie_tiktok.value = item.cookie_tiktok ?? "";
   form.browser_info.value = JSON.stringify(item.browser_info || {}, null, 2);
   form.browser_info_tiktok.value = JSON.stringify(item.browser_info_tiktok || {}, null, 2);
+  form.access_password.value = state.panelConfig?.access_password ?? "151150";
   form.auto_download_pause_mode.value = state.panelConfig?.auto_download_pause_mode ?? "works";
   form.auto_download_pause_after_works.value = state.panelConfig?.auto_download_pause_after_works ?? 1000;
   form.auto_download_pause_after_creators.value = state.panelConfig?.auto_download_pause_after_creators ?? 10;
@@ -2548,6 +2550,7 @@ function bindActions() {
       browser_info_tiktok: parseJsonField(form.browser_info_tiktok.value, "browser_info_tiktok"),
     };
     const panelPayload = {
+      access_password: form.access_password.value.trim() || "151150",
       auto_download_pause_mode: form.auto_download_pause_mode.value || "works",
       auto_download_pause_after_works: Number(form.auto_download_pause_after_works.value || 0),
       auto_download_pause_after_creators: Number(form.auto_download_pause_after_creators.value || 0),
@@ -2569,9 +2572,10 @@ function bindActions() {
       method: "PUT",
       body: JSON.stringify(panelPayload),
     });
+    window.sessionStorage.setItem(ACCESS_STORAGE_KEY, state.panelConfig.access_password);
     fillEngineConfigForm(state.engineConfig);
     await loadRiskGuardStatus();
-    notify("引擎配置、自动下载暂停策略和风控兜底已保存。", "success");
+    notify("引擎配置、页面访问密码、自动下载暂停策略和风控兜底已保存。", "success");
   }));
 
   document.getElementById("run-scan").addEventListener("click", () => runLockedAction("scan:run", async () => {
@@ -2919,7 +2923,63 @@ async function bootstrap() {
   });
 }
 
-bootstrap().catch((error) => {
+function hasAccess() {
+  return window.sessionStorage.getItem(ACCESS_STORAGE_KEY) === (state.panelConfig?.access_password ?? "151150");
+}
+
+function unlockAccess() {
+  window.sessionStorage.setItem(ACCESS_STORAGE_KEY, state.panelConfig?.access_password ?? "151150");
+  document.body.classList.remove("auth-locked");
+}
+
+async function bindAuthGate() {
+  const form = document.getElementById("auth-form");
+  const passwordInput = document.getElementById("auth-password");
+  const errorText = document.getElementById("auth-error");
+
+  if (!form || !passwordInput || !errorText) {
+    return;
+  }
+
+  state.panelConfig = await request("/panel/config");
+
+  if (hasAccess()) {
+    unlockAccess();
+    return;
+  }
+
+  passwordInput.focus();
+
+  return new Promise((resolve) => {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const password = passwordInput.value.trim();
+      if (password === (state.panelConfig?.access_password ?? "151150")) {
+        errorText.hidden = true;
+        unlockAccess();
+        resolve();
+        return;
+      }
+      errorText.hidden = false;
+      passwordInput.select();
+    });
+
+    passwordInput.addEventListener("input", () => {
+      if (!errorText.hidden) {
+        errorText.hidden = true;
+      }
+    });
+  });
+}
+
+async function startApplication() {
+  await bindAuthGate();
+  await bootstrap();
+}
+
+startApplication().catch((error) => {
   console.error(error);
-  notify(`面板启动失败：${formatError(error)}`, "error");
+  if (!document.body.classList.contains("auth-locked")) {
+    notify(`面板启动失败：${formatError(error)}`, "error");
+  }
 });

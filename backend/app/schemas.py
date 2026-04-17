@@ -126,6 +126,7 @@ class EngineConfig(BaseModel):
 
 
 class PanelConfig(BaseModel):
+    access_password: str = Field(default="151150", min_length=1)
     auto_download_pause_mode: str = "works"
     auto_download_pause_after_works: int = 1000
     auto_download_pause_after_creators: int = 10

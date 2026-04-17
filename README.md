@@ -57,14 +57,14 @@ pip install -r requirements.txt
 
 当前 `docker-compose.yml` 已显式使用 `bridge` 网络，并假设：
 
-- 原引擎项目的 `Volume` 挂载目录是 `/ddata/tkdownshangmian`
-- 面板自己的数据目录使用 `/ddata/tkdownshangmian/newweb-data`
+- 原引擎项目的 `Volume` 挂载目录是 `/ddata/tkdown`
+- 面板自己的数据目录使用 `/ddata/tkdown/newweb-data`
 - 原引擎 Web API 通过宿主机 `5555` 端口访问
 
 创建面板数据目录：
 
 ```bash
-mkdir -p /ddata/tkdownshangmian/newweb-data
+mkdir -p /ddata/tkdown/newweb-data
 ```
 
 启动：
@@ -95,8 +95,8 @@ docker compose up -d --build
 “下载配置”里的“下载根目录”建议按实际运行环境填写：
 
 - Windows 本地直接运行 `NEWWEB` 时，建议填写 Windows 绝对路径，例如：`F:\Media\抖音`
-- Linux 直接运行时，建议填写 Linux 绝对路径，例如：`/ddata/tkdownshangmian/抖音`
-- Linux Docker 部署且引擎卷挂载为 `/ddata/tkdownshangmian` 时，容器内推荐填写：`/Volume/抖音`
+- Linux 直接运行时，建议填写 Linux 绝对路径，例如：`/ddata/tkdown/抖音`
+- Linux Docker 部署且引擎卷挂载为 `/ddata/tkdown` 时，容器内推荐填写：`/Volume/抖音`
 
 为避免本地调试时把 Docker 路径误判为无效目录，`NEWWEB` 当前已兼容以下写法：
 
@@ -106,7 +106,7 @@ docker compose up -d --build
 
 它们都会自动映射到当前引擎卷目录下：
 
-- Windows 本地示例：`F:\1KFNEW\TKDOWN\Volume\抖音`
+- Windows 本地示例：`F:\TKDOWN\Volume\抖音`
 - Linux / Docker 示例：`/Volume/抖音`
 
 推荐用法：

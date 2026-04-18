@@ -1570,6 +1570,7 @@ function fillEngineConfigForm(item) {
   form.auto_download_pause_after_works.value = state.panelConfig?.auto_download_pause_after_works ?? 1000;
   form.auto_download_pause_after_creators.value = state.panelConfig?.auto_download_pause_after_creators ?? 10;
   form.auto_download_pause_minutes.value = state.panelConfig?.auto_download_pause_minutes ?? 5;
+  form.auto_download_work_batch_size.value = state.panelConfig?.auto_download_work_batch_size ?? 20;
   form.risk_guard_enabled.checked = Boolean(state.panelConfig?.risk_guard_enabled);
   form.risk_guard_cooldown_hours.value = state.panelConfig?.risk_guard_cooldown_hours ?? 24;
   form.risk_guard_http_error_streak.value = state.panelConfig?.risk_guard_http_error_streak ?? 3;
@@ -2570,6 +2571,7 @@ function bindActions() {
       auto_download_pause_after_works: Number(form.auto_download_pause_after_works.value || 0),
       auto_download_pause_after_creators: Number(form.auto_download_pause_after_creators.value || 0),
       auto_download_pause_minutes: Number(form.auto_download_pause_minutes.value || 5),
+      auto_download_work_batch_size: Number(form.auto_download_work_batch_size.value || 20),
       risk_guard_enabled: boolValue(form, "risk_guard_enabled"),
       risk_guard_cooldown_hours: Number(form.risk_guard_cooldown_hours.value || 24),
       risk_guard_http_error_streak: Number(form.risk_guard_http_error_streak.value || 3),
@@ -2590,7 +2592,7 @@ function bindActions() {
     window.sessionStorage.setItem(ACCESS_STORAGE_KEY, state.panelConfig.access_password);
     fillEngineConfigForm(state.engineConfig);
     await loadRiskGuardStatus();
-    notify("引擎配置、页面访问密码、自动下载暂停策略和风控兜底已保存。", "success");
+    notify("引擎配置、页面访问密码、自动下载暂停策略、批次大小和风控兜底已保存。", "success");
   }));
 
   document.getElementById("run-scan").addEventListener("click", () => runLockedAction("scan:run", async () => {

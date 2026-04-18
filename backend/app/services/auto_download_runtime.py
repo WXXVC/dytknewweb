@@ -1,10 +1,11 @@
 import asyncio
 from datetime import datetime, timedelta
 
-from ..config import AUTO_DOWNLOAD_MAX_CONCURRENCY
+from ..config import AUTO_DOWNLOAD_MAX_CONCURRENCY, AUTO_DOWNLOAD_WORK_BATCH_SIZE
 from ..schemas import DownloadWorksTaskCreate
 from . import scans
 from .auto_download_throttle import is_auto_download_paused
+from .panel_config import read_panel_config
 from .creators import get_creator, list_due_auto_download_creators, update_auto_download_result
 from .engine import fetch_account_items
 from .risk_guard import is_risk_guard_active
@@ -54,6 +55,15 @@ def _scan_creator_once(creator_id: int) -> tuple[dict, list[str]]:
     return payload, work_ids
 
 
+def _split_work_ids(work_ids: list[str]) -> list[list[str]]:
+    config = read_panel_config()
+    size = max(
+        1,
+        int(config.get("auto_download_work_batch_size") or AUTO_DOWNLOAD_WORK_BATCH_SIZE),
+    )
+    return [work_ids[index:index + size] for index in range(0, len(work_ids), size)]
+
+
 async def run_once_for_creator(creator: dict) -> None:
     creator_id = creator["id"]
     if creator_id in RUNNING_CREATORS:
@@ -85,15 +95,20 @@ async def run_once_for_creator(creator: dict) -> None:
             )
             return
 
-        await asyncio.to_thread(
-            create_auto_works_download_task,
-            DownloadWorksTaskCreate(creator_id=creator_id, work_ids=work_ids),
-        )
+        batches = _split_work_ids(work_ids)
+        for batch_work_ids in batches:
+            await asyncio.to_thread(
+                create_auto_works_download_task,
+                DownloadWorksTaskCreate(creator_id=creator_id, work_ids=batch_work_ids),
+            )
         await asyncio.to_thread(
             update_auto_download_result,
             creator_id,
             status="scheduled",
-            message=f"扫描完成，新增待下载作品 {len(work_ids)} 个，已加入任务队列。",
+            message=(
+                f"扫描完成，新增待下载作品 {len(work_ids)} 个，"
+                f"已拆分为 {len(batches)} 个批次加入任务队列。"
+            ),
             next_run_at=_next_run_after(creator),
         )
     except Exception as error:

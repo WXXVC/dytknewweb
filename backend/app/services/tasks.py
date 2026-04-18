@@ -28,7 +28,7 @@ from ..db import get_sqlite_task, list_sqlite_scan_cache, list_sqlite_tasks, nex
 from ..db import count_sqlite_tasks, delete_sqlite_tasks_by_creator, list_sqlite_task_summaries, list_sqlite_task_summaries_paginated, list_sqlite_tasks_by_statuses
 from ..schemas import DownloadTaskCreate, DownloadWorksTaskCreate
 from .auto_download_throttle import is_auto_download_paused, record_auto_download_progress
-from .creators import clear_auto_download_runtime_state, collect_creator_work_ids_for_purge, get_creator, list_creators
+from .creators import clear_auto_download_runtime_state, collect_creator_work_ids_for_purge, get_creator, list_creators, update_auto_download_result
 from .engine import (
     build_run_command,
     build_settings_payload,
@@ -93,6 +93,7 @@ def _task_status(task: dict) -> dict:
         task["exit_code"] = code
         _evaluate_completed_task_risk(task)
         _record_completed_auto_download_progress(task)
+        _sync_creator_auto_download_status(task)
         task["updated_at"] = now_iso()
         save_sqlite_task(task)
         _finalize_registry_entry(task["id"])
@@ -345,6 +346,45 @@ def _record_completed_auto_download_progress(task: dict) -> None:
     )
     if throttle_state.get("last_reason"):
         task["message"] = f"{task.get('message') or 'Downloader process finished successfully'} {throttle_state['last_reason']}".strip()
+
+
+def _sync_creator_auto_download_status(task: dict) -> None:
+    if task.get("mode") != "auto_detail_download":
+        return
+    creator_id = int(task.get("creator_id") or 0)
+    if not creator_id:
+        return
+    try:
+        creator = get_creator(creator_id)
+    except HTTPException:
+        return
+
+    next_run_at = creator.get("auto_download_next_run_at")
+    work_ids = [str(item) for item in (task.get("work_ids") or []) if item]
+    if task.get("status") == "success":
+        downloaded_ids = read_downloaded_ids(force_refresh=True)
+        success_count = sum(1 for work_id in work_ids if work_id in downloaded_ids)
+        message = (
+            f"自动下载完成，成功下载 {success_count}/{len(work_ids)} 个作品。"
+            if work_ids
+            else "自动下载完成。"
+        )
+        update_auto_download_result(
+            creator_id,
+            status="success",
+            message=message,
+            next_run_at=next_run_at,
+            mark_run=False,
+        )
+        return
+
+    update_auto_download_result(
+        creator_id,
+        status="failed",
+        message=task.get("message") or "自动下载任务失败",
+        next_run_at=next_run_at,
+        mark_run=False,
+    )
 
 
 def _ensure_shared_db_link(target_volume: Path) -> None:

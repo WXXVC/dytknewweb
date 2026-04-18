@@ -1,3 +1,5 @@
+import sys
+
 from rich.console import Console
 from rich.text import Text
 
@@ -19,7 +21,20 @@ class ColorfulConsole(Console):
         self.debug_mode = debug
 
     def print(self, *args, style=GENERAL, highlight=False, **kwargs):
-        super().print(*args, style=style, highlight=highlight, **kwargs)
+        try:
+            super().print(*args, style=style, highlight=highlight, **kwargs)
+        except UnicodeEncodeError:
+            encoding = (
+                getattr(self.file, "encoding", None)
+                or getattr(sys.stdout, "encoding", None)
+                or "utf-8"
+            )
+            fallback = " ".join(str(arg) for arg in args)
+            sanitized = fallback.encode(encoding, errors="backslashreplace").decode(
+                encoding,
+                errors="ignore",
+            )
+            super().print(sanitized, style=style, highlight=False, **kwargs)
 
     def info(self, *args, highlight=False, **kwargs):
         self.print(*args, style=INFO, highlight=highlight, **kwargs)

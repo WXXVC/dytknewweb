@@ -131,6 +131,7 @@ class PanelConfig(BaseModel):
     auto_download_pause_after_works: int = 1000
     auto_download_pause_after_creators: int = 10
     auto_download_pause_minutes: int = 5
+    auto_download_work_batch_size: int = 20
     risk_guard_enabled: bool = False
     risk_guard_cooldown_hours: int = 24
     risk_guard_http_error_streak: int = 3

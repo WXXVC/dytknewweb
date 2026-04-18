@@ -2,7 +2,7 @@ import json
 from copy import deepcopy
 from platform import system
 
-from ..config import DATA_DIR
+from ..config import AUTO_DOWNLOAD_WORK_BATCH_SIZE, DATA_DIR
 
 
 PANEL_CONFIG_PATH = DATA_DIR / "panel_config.json"
@@ -14,6 +14,7 @@ PANEL_CONFIG_DEFAULTS = {
     "auto_download_pause_after_works": 1000,
     "auto_download_pause_after_creators": 10,
     "auto_download_pause_minutes": 5,
+    "auto_download_work_batch_size": AUTO_DOWNLOAD_WORK_BATCH_SIZE,
     "risk_guard_enabled": False,
     "risk_guard_cooldown_hours": 24,
     "risk_guard_http_error_streak": 3,

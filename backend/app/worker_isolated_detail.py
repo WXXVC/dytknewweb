@@ -10,6 +10,13 @@ if str(ENGINE_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(ENGINE_PROJECT_ROOT))
 
 
+def configure_stdio() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
 def patch_project_root(volume_path: Path) -> None:
     import src.custom as custom
     import src.custom.internal as internal
@@ -52,6 +59,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    configure_stdio()
     patch_project_root(Path(args.volume))
     asyncio.run(run_download(args.ids, args.platform == "tiktok"))
 
